@@ -1,0 +1,464 @@
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "mysql"
+//   url      = env("DATABASE_URL")
+// }
+
+// model user {
+//   user_id                Int                      @id @default(autoincrement())
+//   username               String                   @unique
+//   email                  String                   @unique
+//   password               String
+//   role                   Role
+//   phone_number           String                   @unique
+//   created_at             DateTime                 @default(now())
+//   activated              Boolean                  @default(true)
+//   department_id          Int?
+//   Department             department?              @relation("UsersDepartment", fields: [department_id], references: [department_id], onDelete: Restrict)
+//   request_id             Int?
+//   MaintenanceRequests    MaintenanceRequest?      @relation("EmployeeMaintenanceRequests", fields: [request_id], references: [request_id])
+//   MaintenanceAssignments Assignment[]             @relation("TechnicianAssignments")
+//   FeedbackGiven          Feedback[]               @relation("EmployeeFeedbacks")
+//   completionConfirmation completionConfirmation[] @relation("completionLetterByTechnician")
+
+//   // // DepartmentMaintenanceRequests  MaintenanceRequest[]     @relation("DepartmentMaintenanceRequest")
+//   // MaintenanceMaintenanceRequests MaintenanceRequest[]     @relation("MaintenanceHeadRequests")
+//   // TechnicianMaintenanceRequests  MaintenanceRequest[]     @relation("TechnicianMaintenanceRequests")
+//   // usersOnRequest         usersOnRequest[]         @relation("userOnRequest")
+// }
+
+// model department {
+//   department_id   Int      @id @default(autoincrement())
+//   department_name String   @unique
+//   created_at      DateTime @default(now())
+
+//   Users               user[]               @relation("UsersDepartment") // relation for both department and user table
+//   MaintenanceRequests MaintenanceRequest[] @relation("DepartmentMaintenanceRequests")
+// }
+
+// model MaintenanceRequest {
+//   request_id         Int      @id @default(autoincrement())
+//   requester_name     String
+//   email              String
+//   other_request_type String?
+//   device_type        String
+//   request_type       String
+//   model_no           String
+//   description        String
+//   phone_number       String
+//   status             Status   @default(In_Progress)
+//   priority           Priority
+//   created_at         DateTime @default(now())
+//   updated_at         DateTime @default(now()) @updatedAt
+//   employee_id        Int
+
+//   user user[] @relation("EmployeeMaintenanceRequests")
+
+//   // maintenance request and department relationship
+//   department_id Int? //we are assisning this id inorder to get the name from the user and get this id from that
+//   department    department? @relation("DepartmentMaintenanceRequests", fields: [department_id], references: [department_id], map: "DepartmentMaintenanceRequests_fkey", onDelete: Restrict)
+
+//   //Request Type and maintenance Request relationship set  dynamic
+//   request_type_id Int?
+//   RequestType     RequestType? @relation("RequestType", fields: [request_type_id], references: [request_type_id], onDelete: SetNull)
+
+//   // Relations
+//   Feedbacks               Feedback[]              @relation("MaintenanceRequestFeedbacks")
+//   Assignments             AssignmentOnRequest[]   @relation("MaintenanceRequestAssignments")
+//   completionConfirmations completionConfirmation? @relation("MaintenanceRequestConfirmation") //
+// }
+
+// model RequestType {
+//   request_type_id     Int                  @id @default(autoincrement())
+//   request_type_name   String               @unique
+//   created_at          DateTime             @default(now())
+//   maintenanceRequests MaintenanceRequest[] @relation("RequestType")
+// }
+
+// model Feedback {
+//   feedback_id   Int      @id @default(autoincrement())
+//   rating        Int      @default(1)
+//   comments      String
+//   created_at    DateTime @default(now())
+//   request_id    Int
+//   employee_id   Int
+//   technician_id Int      @unique
+//   MaintenanceRequest    MaintenanceRequest     @relation("MaintenanceRequestFeedbacks", fields: [request_id], references: [request_id], map: "FeedbackMaintenanceRequests_fkey")
+//   user                  user                   @relation("EmployeeFeedbacks", fields: [employee_id], references: [user_id])
+//   confirmation_feedback completionConfirmation @relation("feedbacktoTechnician", fields: [technician_id], references: [confirmation_id], map: "ConformationFeedbakc_fkey")
+// }
+
+// model Assignment {
+//   assignment_id Int                   @id @default(autoincrement())
+//   assigned_at   DateTime              @default(now())
+//   completed_at  Boolean               @default(false)
+//   work_load     Int                   @default(0)
+//   request_id    Int
+//   technician_id Int
+//   user          user                  @relation("TechnicianAssignments", fields: [technician_id], references: [user_id], map: "AssignmentTechnician_fkey")
+//   Requests      AssignmentOnRequest[] @relation("AssignmentOnRequest")
+// }
+
+// model completionConfirmation {
+//   confirmation_id   Int      @id @default(autoincrement())
+//   finished_at       DateTime @default(now())
+//   given_at          DateTime
+//   request_id        Int      @unique
+//   technician_id     Int
+//   detail_of_problem String
+//   Technician        user     @relation("completionLetterByTechnician", fields: [technician_id], references: [user_id])
+
+//   Request         MaintenanceRequest @relation("MaintenanceRequestConfirmation", fields: [request_id], references: [request_id])
+//   feedbackRecived Feedback?          @relation("feedbacktoTechnician")
+// }
+
+// // Extra table for mapping assignment and maintenance requests (join table)
+// model AssignmentOnRequest {
+//   request_id    Int
+//   assignment_id Int
+//   assigned_at   DateTime @default(now())
+
+//   MaintenanceRequest MaintenanceRequest @relation("MaintenanceRequestAssignments", fields: [request_id], references: [request_id], map: "MaintenanceRequestAssignments_fkey")
+//   Assignment         Assignment         @relation("AssignmentOnRequest", fields: [assignment_id], references: [assignment_id], map: "AssignmentOnRequest_fkey")
+
+//   @@id([request_id, assignment_id])
+// }
+
+// model ProblemSearch {
+//   solution_id Int      @id @default(autoincrement())
+//   title       String
+//   video_url   String
+//   description Json
+//   created_at  DateTime @default(now())
+// }
+
+// enum Role {
+//   Admin
+//   Employee
+//   Department_Head
+//   Maintenance_Head
+//   Technician
+// }
+
+// enum Status {
+//   Pending
+//   In_Progress
+//   Completed
+//   Rejected
+//   Assigned
+// }
+
+// enum Priority {
+//   Low
+//   Medium
+//   High
+//   Emergency
+// }
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// model user {
+//   user_id                Int                      @id @default(autoincrement())
+//   username               String                   @unique
+//   email                  String                   @unique
+//   password               String
+//   role                   Role
+//   phone_number           String                   @unique
+//   created_at             DateTime                 @default(now())
+//   activated              Boolean                  @default(true)
+//   department_id          Int?
+//   Department             department?              @relation("UsersDepartment", fields: [department_id], references: [department_id], onDelete: Restrict)
+//   request_id             Int?
+//   MaintenanceRequests    MaintenanceRequest?      @relation("EmployeeMaintenanceRequests", fields: [request_id], references: [request_id])
+//   MaintenanceAssignments Assignment[]             @relation("TechnicianAssignments")
+//   FeedbackGiven          Feedback[]               @relation("EmployeeFeedbacks")
+//   completionConfirmation completionConfirmation[] @relation("completionLetterByTechnician")
+
+// }
+
+// model department {
+//   department_id   Int      @id @default(autoincrement())
+//   department_name String   @unique
+//   created_at      DateTime @default(now())
+
+//   Users               user[]               @relation("UsersDepartment") // relation for both department and user table
+//   MaintenanceRequests MaintenanceRequest[] @relation("DepartmentMaintenanceRequests")
+// }
+
+// model MaintenanceRequest {
+//   request_id         Int      @id @default(autoincrement())
+//   requester_name     String
+//   email              String
+//   other_request_type String?
+//   device_type        String
+//   request_type       String
+//   model_no           String
+//   description        String
+//   phone_number       String
+//   status             Status   @default(In_Progress)
+//   priority           Priority?
+//   created_at         DateTime @default(now())
+//   updated_at         DateTime @default(now()) @updatedAt
+//   employee_id        Int
+
+//   user user[] @relation("EmployeeMaintenanceRequests")
+
+//   // maintenance request and department relationship
+//   department_id Int? //we are assisning this id inorder to get the name from the user and get this id from that
+//   department    department? @relation("DepartmentMaintenanceRequests", fields: [department_id], references: [department_id], map: "DepartmentMaintenanceRequests_fkey", onDelete: Restrict)
+
+//   //Request Type and maintenance Request relationship set  dynamic
+//   request_type_id Int?
+//   RequestType     RequestType? @relation("RequestType", fields: [request_type_id], references: [request_type_id], onDelete: SetNull)
+
+//   // Relations
+//   Feedbacks               Feedback[]              @relation("MaintenanceRequestFeedbacks")
+//   Assignments             Assignment[]   @relation("MaintenanceRequestAssignments")
+//   completionConfirmations completionConfirmation? @relation("MaintenanceRequestConfirmation") //
+// }
+
+// model RequestType {
+//   request_type_id     Int                  @id @default(autoincrement())
+//   request_type_name   String               @unique
+//   created_at          DateTime             @default(now())
+//   maintenanceRequests MaintenanceRequest[] @relation("RequestType")
+// }
+
+// model Feedback {
+//   feedback_id   Int      @id @default(autoincrement())
+//   rating        Int      @default(1)
+//   comments      String
+//   created_at    DateTime @default(now())
+//   request_id    Int
+//   employee_id   Int
+//   technician_id Int
+//   MaintenanceRequest    MaintenanceRequest       @relation("MaintenanceRequestFeedbacks", fields: [request_id], references: [request_id], map: "FeedbackMaintenanceRequests_fkey")
+//   user                  user                     @relation("EmployeeFeedbacks", fields: [employee_id], references: [user_id])
+//   confirmation_feedback completionConfirmation[] @relation("feedbacktoTechnician")
+// }
+
+// model Assignment {
+//   assignment_id Int                   @id @default(autoincrement())
+//   assigned_at   DateTime              @default(now())
+//   completed_at  Boolean               @default(false)
+//   work_load     Int                   @default(0)
+//   request_id    Int
+//   technician_id Int
+//   user          user                  @relation("TechnicianAssignments", fields: [technician_id], references: [user_id], map: "AssignmentTechnician_fkey")
+//   Requests      MaintenanceRequest @relation("MaintenanceRequestAssignments", fields: [request_id], references: [request_id])
+// }
+
+// model completionConfirmation {
+//   confirmation_id   Int      @id @default(autoincrement())
+//   finished_at       DateTime @default(now())
+//   given_at          DateTime
+//   request_id        Int      @unique
+//   technician_id     Int
+//   detail_of_problem String
+//   Technician        user     @relation("completionLetterByTechnician", fields: [technician_id], references: [user_id])
+//   feedback_id       Int?
+
+//   Request         MaintenanceRequest @relation("MaintenanceRequestConfirmation", fields: [request_id], references: [request_id])
+//   feedbackRecived Feedback?          @relation("feedbacktoTechnician", fields: [feedback_id], references: [feedback_id], map: "ConformationFeedbakc_fkey")
+// }
+
+// // Extra table for mapping assignment and maintenance requests (join table)
+// // model AssignmentOnRequest {
+// //   request_id    Int
+// //   assignment_id Int
+// //   assigned_at   DateTime @default(now())
+
+// //   MaintenanceRequest MaintenanceRequest @relation("MaintenanceRequestAssignments", fields: [request_id], references: [request_id], map: "MaintenanceRequestAssignments_fkey")
+// //   Assignment         Assignment         @relation("AssignmentOnRequest", fields: [assignment_id], references: [assignment_id], map: "AssignmentOnRequest_fkey")
+
+// //   @@id([request_id, assignment_id])
+// // }
+
+// model ProblemSearch {
+//   solution_id Int      @id @default(autoincrement())
+//   title       String
+//   video_url   String
+//   description Json
+//   created_at  DateTime @default(now())
+// }
+
+// enum Role {
+//   Admin
+//   Employee
+//   Department_Head
+//   Maintenance_Head
+//   Technician
+// }
+
+// enum Status {
+//   Pending
+//   In_Progress
+//   Completed
+//   Rejected
+//   Assigned
+// }
+
+// enum Priority {
+//   Low
+//   Medium
+//   High
+//   Emergency
+// }
+model user {
+  user_id                Int                      @id @default(autoincrement())
+  username               String                   @unique
+  email                  String                   @unique
+  password               String
+  role                   Role
+  phone_number           String                   @unique
+  created_at             DateTime                 @default(now())
+  activated              Boolean                  @default(true)
+  department_id          Int?
+  Department             department?              @relation("UsersDepartment", fields: [department_id], references: [department_id], onDelete: Restrict)
+  request_id             Int?
+  MaintenanceRequests    MaintenanceRequest?      @relation("EmployeeMaintenanceRequests", fields: [request_id], references: [request_id])
+  MaintenanceAssignments Assignment[]             @relation("TechnicianAssignments")
+  FeedbackGiven          Feedback[]               @relation("EmployeeFeedbacks")
+  completionConfirmation completionConfirmation[] @relation("completionLetterByTechnician")
+
+}
+
+model department {
+  department_id   Int      @id @default(autoincrement())
+  department_name String   @unique
+  created_at      DateTime @default(now())
+
+  Users               user[]               @relation("UsersDepartment") // relation for both department and user table
+  MaintenanceRequests MaintenanceRequest[] @relation("DepartmentMaintenanceRequests")
+}
+
+model MaintenanceRequest {
+  request_id         Int      @id @default(autoincrement())
+  requester_name     String
+  email              String
+  other_request_type String?
+  device_type        String
+  request_type       String
+  model_no           String
+  description        String
+  phone_number       String
+  status             Status   @default(In_Progress)
+  priority           Priority?
+  reasonOnRejection  String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @default(now()) @updatedAt
+  employee_id        Int
+
+  user user[] @relation("EmployeeMaintenanceRequests")
+
+  // maintenance request and department relationship
+  department_id Int? //we are assisning this id inorder to get the name from the user and get this id from that
+  department    department? @relation("DepartmentMaintenanceRequests", fields: [department_id], references: [department_id], map: "DepartmentMaintenanceRequests_fkey", onDelete: Restrict)
+
+  //Request Type and maintenance Request relationship set  dynamic
+  request_type_id Int?
+  RequestType     RequestType? @relation("RequestType", fields: [request_type_id], references: [request_type_id], onDelete: SetNull)
+
+  // Relations
+  Feedbacks               Feedback[]              @relation("MaintenanceRequestFeedbacks")
+  Assignments             Assignment[]   @relation("MaintenanceRequestAssignments")
+  completionConfirmations completionConfirmation? @relation("MaintenanceRequestConfirmation") //
+}
+
+model RequestType {
+  request_type_id     Int                  @id @default(autoincrement())
+  request_type_name   String               @unique
+  created_at          DateTime             @default(now())
+  maintenanceRequests MaintenanceRequest[] @relation("RequestType")
+}
+
+model Feedback {
+  feedback_id   Int      @id @default(autoincrement())
+  rating        Int      @default(1)
+  comments      String
+  created_at    DateTime @default(now())
+  request_id    Int
+  employee_id   Int
+  technician_id Int
+  MaintenanceRequest    MaintenanceRequest       @relation("MaintenanceRequestFeedbacks", fields: [request_id], references: [request_id], map: "FeedbackMaintenanceRequests_fkey")
+  user                  user                     @relation("EmployeeFeedbacks", fields: [employee_id], references: [user_id])
+  confirmation_feedback completionConfirmation[] @relation("feedbacktoTechnician")
+}
+
+model Assignment {
+  assignment_id Int                   @id @default(autoincrement())
+  assigned_at   DateTime              @default(now())
+  completed_at  Boolean               @default(false)
+  work_load     Int                   @default(0)
+  request_id    Int
+  technician_id Int
+  user          user                  @relation("TechnicianAssignments", fields: [technician_id], references: [user_id], map: "AssignmentTechnician_fkey")
+  Requests      MaintenanceRequest @relation("MaintenanceRequestAssignments", fields: [request_id], references: [request_id])
+}
+
+model completionConfirmation {
+  confirmation_id   Int      @id @default(autoincrement())
+  finished_at       DateTime @default(now())
+  given_at          DateTime
+  request_id        Int      @unique
+  technician_id     Int
+  detail_of_problem String
+  Technician        user     @relation("completionLetterByTechnician", fields: [technician_id], references: [user_id])
+  feedback_id       Int?
+
+  Request         MaintenanceRequest @relation("MaintenanceRequestConfirmation", fields: [request_id], references: [request_id])
+  feedbackRecived Feedback?          @relation("feedbacktoTechnician", fields: [feedback_id], references: [feedback_id], map: "ConformationFeedbakc_fkey")
+}
+
+// Extra table for mapping assignment and maintenance requests (join table)
+// model AssignmentOnRequest {
+//   request_id    Int
+//   assignment_id Int
+//   assigned_at   DateTime @default(now())
+
+//   MaintenanceRequest MaintenanceRequest @relation("MaintenanceRequestAssignments", fields: [request_id], references: [request_id], map: "MaintenanceRequestAssignments_fkey")
+//   Assignment         Assignment         @relation("AssignmentOnRequest", fields: [assignment_id], references: [assignment_id], map: "AssignmentOnRequest_fkey")
+
+//   @@id([request_id, assignment_id])
+// }
+
+model ProblemSearch {
+  solution_id Int      @id @default(autoincrement())
+  title       String
+  video_url   String
+  description Json
+  created_at  DateTime @default(now())
+}
+
+enum Role {
+  Admin
+  Employee
+  Department_Head
+  Maintenance_Head
+  Technician
+}
+
+enum Status {
+  Pending
+  In_Progress
+  Completed
+  Rejected
+  Assigned
+}
+
+enum Priority {
+  Low
+  Medium
+  High
+  Emergency
+}
